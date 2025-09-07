@@ -1,11 +1,12 @@
 "use client";
 
-import { motion, useMotionValue, useSpring } from "framer-motion";
-import { div } from "framer-motion/client";
-import { useEffect, useState } from "react";
+import { motion, useMotionValue, useSpring, useScroll, useTransform } from "framer-motion";
+import { useEffect, useRef, useState } from "react";
+import Image from "next/image";
 
 export default function Hero ()
 {
+    // Motion values for Main Div
     const x = useMotionValue( 0 );
     const y = useMotionValue( 0 );
 
@@ -41,53 +42,83 @@ export default function Hero ()
         };
     }, [] );
 
-    return (
-        <div className="relative h-screen w-screen overflow-hidden">
-            {/* Background Image with animation */ }
-            <motion.div
-                className="absolute inset-0"
-                initial={ { scale: 1.3 } }
-                animate={ { scale: 1.1 } }
-                transition={ { duration: 2, ease: "easeOut" } }
-                style={ {
-                    backgroundImage: "url('../hero-bg.jpg')",
-                    backgroundSize: 'cover',
-                    backgroundPosition: 'center',
-                    x: springX,
-                    y: springY
-                } }
-            />
+    // Parallax effect for the section below
+    const ref = useRef( null);
+    const { scrollYProgress } = useScroll({
+        target: ref,
+        offset: ["start end", "end start"]
+    });
+    const opacity = useTransform( scrollYProgress, [ 0.1, 0.6 ], [ 0, 1 ] );
+    const ySection = useTransform( scrollYProgress, [ 0.2, 1 ], [ "-60%", "100%" ] )
 
-            {/* vignette overlay */ }
-            { showVignette && (
+
+    return (
+        <div className="relative w-screen overflow-hidden">
+            <main className="relative h-screen w-screen overflow-hidden z-0">
+                {/* Background Image with animation */ }
                 <motion.div
-                    className="absolute inset-0 pointer-events-none"
-                    initial={ { opacity: 0 } }
-                    animate={ { opacity: 1 } }
-                    transition={ { duration: 1.5, ease: "easeInOut" } }
+                    className="absolute inset-0"
+                    initial={ { scale: 1.3 } }
+                    animate={ { scale: 1.1 } }
+                    transition={ { duration: 2, ease: "easeOut" } }
                     style={ {
-                        background: "radial-gradient(ellipse, rgba(0,0,0,0) 60%, rgba(0,0,0,0.7) 100%)"
+                        backgroundImage: "url('../hero-bg.jpg')",
+                        backgroundSize: 'cover',
+                        backgroundPosition: 'center',
+                        x: springX,
+                        y: springY
                     } }
                 />
-            ) }
 
-            {/* Overlay content */ }
-            { showText && (
+                {/* vignette overlay */ }
+                { showVignette && (
+                    <motion.div
+                        className="absolute inset-0 pointer-events-none"
+                        initial={ { opacity: 0 } }
+                        animate={ { opacity: 1 } }
+                        transition={ { duration: 1.5, ease: "easeInOut" } }
+                        style={ {
+                            background: "radial-gradient(ellipse, rgba(0,0,0,0) 60%, rgba(0,0,0,0.7) 100%)"
+                        } }
+                    />
+                ) }
+
+                {/* Overlay content */ }
+                { showText && (
+                    <motion.div
+                        className="relative z-10 flex h-full items-center justify-center text-center text-white px-4"
+                        initial={ { opacity: 0 } }
+                        animate={ { opacity: 1 } }
+                        transition={ { duration: 1.5, ease: "easeOut" } }
+                    >
+                        <div className="bg-white/10 backdrop-blur-xs shadow-lg px-12 py-8 w-[50%] max-w-3xl mx-auto rounded-lg ">
+                            <h1 className="text-5xl font-bold mb-4 drop-shadow-md">
+                                Property Marketplace
+                            </h1>
+                            <p className="text-lg font-bold mg-6 drop-shadow-sm">Buy and Sell properties</p>
+                        </div>
+                    </motion.div>
+                ) }
+            </main>
+
+            <section ref={ref} className="relative w-full h-screen overflow-hidden z-30">
+                {/* Street Image with parallax */ }
                 <motion.div
-                    className="relative z-10 flex h-full items-center justify-center text-center text-white px-4"
-                    initial={ { opacity: 0 } }
-                    animate={ { opacity: 1 } }
-                    transition={ { duration: 1.5, ease: "easeOut" } }
+                    className="absolute inset-0"
+                    style={ {
+                        y: ySection,
+                        opacity
+                    } }
                 >
-                    <div className="bg-white/10 backdrop-blur-xs shadow-lg px-12 py-8 w-[50%] max-w-3xl mx-auto rounded-lg ">
-                        <h1 className="text-5xl font-bold mb-4 drop-shadow-md">
-                            Property Marketplace
-                        </h1>
-                        <p className="text-lg font-bold mg-6 drop-shadow-sm">Buy and Sell properties</p>
-                    </div>
+                    <Image
+                        src="/London_satellite.png"
+                        alt="London street view"
+                        width={ 1920 } // replace with your image's actual width
+                        height={ 1080 }
+                        className="object-cover w-full h-full"
+                    />
                 </motion.div>
-            ) }
-
+            </section>
         </div>
     )
 }
